@@ -8,7 +8,7 @@ ARG KC_METRICS_ENABLED=true
 ENV KC_DB=postgres
 
 # Adiciona o provedor do Apple
-ADD --chown=keycloak:keycloak https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.16.0/apple-identity-provider-1.15.0.jar /opt/keycloak/providers/
+ADD --chown=keycloak:keycloak https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.16.0/apple-identity-provider-1.16.0.jar /opt/keycloak/providers/
 
 # Executa o build otimizado (incorpora o provider ao Keycloak)
 RUN /opt/keycloak/bin/kc.sh build
