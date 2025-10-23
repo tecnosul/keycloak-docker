@@ -18,7 +18,7 @@ FROM quay.io/keycloak/keycloak:26.4.2
 
 # Copia os artefatos otimizados (incluindo o provider do Apple)
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
-
+COPY java.config /etc/crypto-policies/back-ends/java.config
 # Configurações essenciais para rodar em PaaS (como Railway)
 ENV KC_HTTP_ENABLED=true
 ENV KC_PROXY=edge
