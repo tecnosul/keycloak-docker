@@ -1,19 +1,31 @@
 FROM quay.io/keycloak/keycloak:26.4.2 AS builder
 
-ARG KC_HEALTH_ENABLED KC_METRICS_ENABLED KC_FEATURES KC_DB KC_HTTP_ENABLED PROXY_ADDRESS_FORWARDING QUARKUS_TRANSACTION_MANAGER_ENABLE_RECOVERY KC_HOSTNAME KC_LOG_LEVEL KC_DB_POOL_MIN_SIZE
+# Habilita health e metrics (boas práticas)
+ARG KC_HEALTH_ENABLED=true
+ARG KC_METRICS_ENABLED=true
 
-ADD --chown=keycloak:keycloak https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.7.1/apple-identity-provider-1.7.1.jar /opt/keycloak/providers/apple-identity-provider-1.7.1.jar
-ADD --chown=keycloak:keycloak https://github.com/wadahiro/keycloak-discord/releases/download/v0.5.0/keycloak-discord-0.5.0.jar /opt/keycloak/providers/keycloak-discord-0.5.0.jar
-COPY /theme/keywind /opt/keycloak/themes/keywind
+# Define o DB, necessário para o build
+ENV KC_DB=postgres
 
+# Adiciona o provedor do Apple
+ADD --chown=keycloak:keycloak https://github.com/klausbetz/apple-identity-provider-keycloak/releases/download/1.16.0/apple-identity-provider-1.15.0.jar /opt/keycloak/providers/
+
+# Executa o build otimizado (incorpora o provider ao Keycloak)
 RUN /opt/keycloak/bin/kc.sh build
 
-FROM quay.io/keycloak/keycloak:latest
+# --- Estágio 2: Imagem Final ---
+FROM quay.io/keycloak/keycloak:26.4.2
 
-COPY java.config /etc/crypto-policies/back-ends/java.config
-
+# Copia os artefatos otimizados (incluindo o provider do Apple)
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
+# Configurações essenciais para rodar em PaaS (como Railway)
+ENV KC_HTTP_ENABLED=true
+ENV KC_PROXY=edge
+
+# O entrypoint original (kc.sh) vai automaticamente
+# usar a variável $PORT fornecida pelo Railway para definir a porta.
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 
-CMD ["start", "--optimized", "--import-realm"]
+# Inicia o servidor em modo otimizado
+CMD ["start", "--optimized"]
